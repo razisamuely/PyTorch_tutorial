@@ -1,18 +1,9 @@
-# %%
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
-# ---
-from six.moves import urllib
-
-opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-urllib.request.install_opener(opener)
-
-# ---
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -24,15 +15,18 @@ num_epochs = 2
 batch_size = 100
 learning_rate = 0.001
 
+transform = transforms.Compose([transforms.ToTensor(),
+                                transforms.Normalize((0.1307), (0.3081))])
+
 # MNIST dataset
 train_dataset = torchvision.datasets.MNIST(root='./data',
                                            train=True,
-                                           transform=transforms.ToTensor(),
+                                           transform=transform ,
                                            download=True)
 
 test_dataset = torchvision.datasets.MNIST(root='./data',
                                           train=False,
-                                          transform=transforms.ToTensor())
+                                          transform=transform)
 
 # Data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
@@ -46,13 +40,15 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 examples = iter(test_loader)
 example_data, example_targets = examples.next()
 
-for i in range(6):
-    plt.subplot(2, 3, i + 1)
-    plt.imshow(example_data[i][0], cmap='gray')
-plt.show()
+# for i in range(6):
+#     plt.subplot(2, 3, i + 1)
+#     plt.imshow(example_data[i][0], cmap='gray')
+# plt.show()
 
 
 # Fully connected neural network with one hidden layer
+
+
 class NeuralNet(nn.Module):
     def __init__(self, input_size, hidden_size, num_classes):
         super(NeuralNet, self).__init__()
@@ -94,7 +90,8 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         if (i + 1) % 100 == 0:
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
+            print(
+                f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -112,3 +109,5 @@ with torch.no_grad():
 
     acc = 100.0 * n_correct / n_samples
     print(f'Accuracy of the network on the 10000 test images: {acc} %')
+
+torch.save(model.state_dict(), "mnist_ffn.pth")
